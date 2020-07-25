@@ -34,7 +34,7 @@ if [ ! -n "$BASH" ] ;then
 	exit 127
 fi
 
-VERSION="0.6.5.1"											# -beta, -hotfix or -dev suffixes possible
+VERSION="0.6.5.1-hotfix"											# -beta, -hotfix or -dev suffixes possible
 VERSION_SCRIPT_CONFIG="0.1.4"									# required config version for script
 
 VERSION_VARNAME="VERSION"										# has to match above var names
@@ -61,11 +61,11 @@ IS_HOTFIX=$(( ! $(grep -iq hotfix <<< "$VERSION"; echo $?) ))
 MYSELF=${0##*/}
 MYNAME=${MYSELF%.*}
 
-GIT_DATE="$Date: 2020-06-08 15:28:45 +0200$"
+GIT_DATE="$Date: 2020-07-25 15:32:21 +0200$"
 GIT_DATE_ONLY=${GIT_DATE/: /}
 GIT_DATE_ONLY=$(cut -f 2 -d ' ' <<< $GIT_DATE)
 GIT_TIME_ONLY=$(cut -f 3 -d ' ' <<< $GIT_DATE)
-GIT_COMMIT="$Sha1: a056338$"
+GIT_COMMIT="$Sha1: a54de5d$"
 GIT_COMMIT_ONLY=$(cut -f 2 -d ' ' <<< $GIT_COMMIT | sed 's/\$//')
 
 GIT_CODEVERSION="$MYSELF $VERSION, $GIT_DATE_ONLY/$GIT_TIME_ONLY - $GIT_COMMIT_ONLY"
@@ -3687,10 +3687,6 @@ function bootPartitionBackup() {
 
 		local p rc
 
-		logItem "Starting boot partition backup..."
-
-		writeToConsole $MSG_LEVEL_MINIMAL $MSG_BACKUP_CREATING_PARTITION_INFO
-
 		if (( ! $FAKE && ! $EXCLUDE_DD && ! $SHARED_BOOT_DIRECTORY )); then
 			local ext=$BOOT_DD_EXT
 			(( $TAR_BOOT_PARTITION_ENABLED )) && ext=$BOOT_TAR_EXT
@@ -3721,54 +3717,54 @@ function bootPartitionBackup() {
 				logItem "Found existing backup of boot partition $BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.$ext ..."
 				writeToConsole $MSG_LEVEL_DETAILED $MSG_EXISTING_BOOT_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.$ext"
 			fi
-
-			if  [[ ! -e "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk" ]]; then
-				writeToConsole $MSG_LEVEL_DETAILED $MSG_CREATING_PARTITION_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk"
-				local stripMultiple
-				if (( $IGNORE_ADDITIONAL_PARTITIONS )); then
-					logItem "Stripping partitions > 2"
-					stripMultiple='| grep -v -E "[3-9] :"'
-				fi
-				eval "sfdisk -d $BOOT_DEVICENAME $stripMultiple" > "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk" 2>>$LOG_FILE
-				local rc=$?
-				if [ $rc != 0 ]; then
-					writeToConsole $MSG_LEVEL_MINIMAL $MSG_UNABLE_TO_COLLECT_PARTITIONINFO "sfdisk" "$rc"
-					exitError $RC_COLLECT_PARTITIONS_FAILED
-				fi
-				logCommand "$(cat "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk")"
-
-				if (( $LINK_BOOTPARTITIONFILES )); then
-					createLinks "$BACKUPTARGET_ROOT" "sfdisk" "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk"
-				fi
-			else
-				logItem "Found existing backup of partition layout $BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk ..."
-				writeToConsole $MSG_LEVEL_DETAILED $MSG_EXISTING_PARTITION_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk"
-			fi
-
-			if  [[ ! -e "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr" ]]; then
-				writeToConsole $MSG_LEVEL_DETAILED $MSG_CREATING_MBR_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr"
-				if (( $FAKE_BACKUPS )); then
-					touch "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr"
-				else
-					dd if=$BOOT_DEVICENAME of="$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr" bs=512 count=1 &>>$LOG_FILE
-					local rc=$?
-					if [ $rc != 0 ]; then
-						writeToConsole $MSG_LEVEL_MINIMAL $MSG_IMG_DD_FAILED ".mbr" "$rc"
-						exitError $RC_COLLECT_PARTITIONS_FAILED
-					fi
-				fi
-
-				if (( $LINK_BOOTPARTITIONFILES )); then
-					createLinks "$BACKUPTARGET_ROOT" "mbr" "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr"
-				fi
-
-			else
-				logItem "Found existing backup of master boot record $BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr ..."
-				writeToConsole $MSG_LEVEL_DETAILED $MSG_EXISTING_MBR_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr"
-			fi
 		fi
 
-		logItem "Finished boot partition backup..."
+		writeToConsole $MSG_LEVEL_MINIMAL $MSG_BACKUP_CREATING_PARTITION_INFO
+		
+		if  [[ ! -e "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk" ]]; then
+			writeToConsole $MSG_LEVEL_DETAILED $MSG_CREATING_PARTITION_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk"
+			local stripMultiple
+			if (( $IGNORE_ADDITIONAL_PARTITIONS )); then
+				logItem "Stripping partitions > 2"
+				stripMultiple='| grep -v -E "[3-9] :"'
+			fi
+			eval "sfdisk -d $BOOT_DEVICENAME $stripMultiple" > "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk" 2>>$LOG_FILE
+			local rc=$?
+			if [ $rc != 0 ]; then
+				writeToConsole $MSG_LEVEL_MINIMAL $MSG_UNABLE_TO_COLLECT_PARTITIONINFO "sfdisk" "$rc"
+				exitError $RC_COLLECT_PARTITIONS_FAILED
+			fi
+			logCommand "$(cat "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk")"
+
+			if (( $LINK_BOOTPARTITIONFILES )); then
+				createLinks "$BACKUPTARGET_ROOT" "sfdisk" "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk"
+			fi
+		else
+			logItem "Found existing backup of partition layout $BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk ..."
+			writeToConsole $MSG_LEVEL_DETAILED $MSG_EXISTING_PARTITION_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.sfdisk"
+		fi
+
+		if  [[ ! -e "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr" ]]; then
+			writeToConsole $MSG_LEVEL_DETAILED $MSG_CREATING_MBR_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr"
+			if (( $FAKE_BACKUPS )); then
+				touch "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr"
+			else
+				dd if=$BOOT_DEVICENAME of="$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr" bs=512 count=1 &>>$LOG_FILE
+				local rc=$?
+				if [ $rc != 0 ]; then
+					writeToConsole $MSG_LEVEL_MINIMAL $MSG_IMG_DD_FAILED ".mbr" "$rc"
+					exitError $RC_COLLECT_PARTITIONS_FAILED
+				fi
+			fi
+
+			if (( $LINK_BOOTPARTITIONFILES )); then
+				createLinks "$BACKUPTARGET_ROOT" "mbr" "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr"
+			fi
+
+		else
+			logItem "Found existing backup of master boot record $BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr ..."
+			writeToConsole $MSG_LEVEL_DETAILED $MSG_EXISTING_MBR_BACKUP "$BACKUPTARGET_DIR/$BACKUPFILES_PARTITION_DATE.mbr"
+		fi
 
 		logExit
 
@@ -5253,6 +5249,8 @@ function inspect4Backup() {
 function inspect4Restore() {
 
 	logEntry
+
+	logCommand "ls -1 $RESTOREFILE/"
 
 	if [[ $BACKUPTYPE != $BACKUPTYPE_DD && $BACKUPTYPE != $BACKUPTYPE_DDZ ]]; then
 		SF_FILE=$(ls -1 $RESTOREFILE/*.sfdisk)
