@@ -34,7 +34,7 @@ if [ ! -n "$BASH" ] ;then
 	exit 127
 fi
 
-VERSION="0.6.5.1"											# -beta, -hotfix or -dev suffixes possible
+VERSION="0.6.5.1-hotfix"										# -beta, -hotfix or -dev suffixes possible
 VERSION_SCRIPT_CONFIG="0.1.4"									# required config version for script
 
 VERSION_VARNAME="VERSION"										# has to match above var names
@@ -5705,7 +5705,7 @@ function restoreNonPartitionBasedBackup() {
 		exitError $RC_PARAMETER_ERROR
 	fi
 
-	if [[ $RESTORE_DEVICE =~ /dev/mmcblk0 || $RESTORE_DEVICE =~ "/dev/loop" ]]; then
+	if [[ $RESTORE_DEVICE =~ /dev/mmcblk[0-9] || $RESTORE_DEVICE =~ "/dev/loop" ]]; then
 		BOOT_PARTITION="${RESTORE_DEVICE}p1"
 	else
 		BOOT_PARTITION="${RESTORE_DEVICE}1"
@@ -5714,7 +5714,7 @@ function restoreNonPartitionBasedBackup() {
 
 	ROOT_PARTITION_DEFINED=1
 	if [[ -z $ROOT_PARTITION ]]; then
-		if [[ $RESTORE_DEVICE =~ /dev/mmcblk0 || $RESTORE_DEVICE =~ "/dev/loop" ]]; then
+		if [[ $RESTORE_DEVICE =~ /dev/mmcblk[0-9] || $RESTORE_DEVICE =~ "/dev/loop" ]]; then
 			ROOT_PARTITION="${RESTORE_DEVICE}p2"
 		else
 			ROOT_PARTITION="${RESTORE_DEVICE}2"
