@@ -1211,8 +1211,8 @@ function callExtensions() { # extensionplugpoint rc
 			local extensionFileName="${MYNAME}_${extension}_$1.sh"
 
 			if which $extensionFileName &>/dev/null; then
-				logItem "Calling $extensionFileName $2"
-				executeShellCommand ". $extensionFileName $2"
+				logItem "Calling $extensionFileName $2  $MSG_FILE"
+				executeShellCommand ". $extensionFileName $2 $MSG_FILE"
 				local rc=$?
 				logItem "Extension RC: $rc"
 				if [[ $rc != 0 ]]; then
